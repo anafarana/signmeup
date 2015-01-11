@@ -11,7 +11,7 @@ var CourseModel = models.Course;
 exports.getRoutes = function() {
     var router = express.Router();
 
-    // Adds the given course to the DB
+    // Creates a new course with the given name
     router.post('/', function(request, response) {
         console.log('[', new Date(), ']\t', 'POST /api/courses');
 
@@ -123,6 +123,159 @@ exports.getRoutes = function() {
             var result = {
                 code: 200,
                 result: courses
+            };
+
+            response.status(result.code).send(result).end();
+        });
+    });
+
+    // Updates one or more properties of the given course
+    router.put('/:course', function(request, response) {
+        console.log('[', new Date(), ']\t', 'PUT /api/courses/:course');
+
+        if(!request.params.hasOwnProperty('course')) {
+            var error = {
+                code: 400,
+                msg: 'Query missing property titled \'course\''
+            };
+
+            console.error('[', new Date(), ']\t', error.msg);
+            response.status(error.code).send(error).end();
+            return;
+        }
+
+        var course = request.params.course;
+
+        CourseModel.find({course: course}, function(findError, documents) {
+            if(findError) {
+                var error = {
+                    code: 500,
+                    msg: '[MongoDB Error] An error occurred while checking if the course already exists.'
+                };
+
+                console.error('[', new Date(), ']\t', error.msg);
+                response.status(error.code).send(error).end();
+                return;
+            }
+
+            if(documents.length === 0) {
+                var error = {
+                    code: 400,
+                    msg: course + ' does not exist in the DB'
+                };
+
+                console.error('[', new Date(), ']\t', error.msg);
+                response.status(error.code).send(error).end();
+                return;
+            }
+
+            var dbCourse = documents[0];
+            var isTypeError = false;
+            var errorMsg = '[Type Error] Incorrect date type for new values of: ';
+
+            if(request.body.hasOwnProperty('isQuestionMandatory') && typeof request.body.isQuestionMandatory === 'boolean') {
+                dbCourse.isQuestionMandatory = request.body.isQuestionMandatory;
+            } else if(request.body.hasOwnProperty('isQuestionMandatory') && typeof request.body.isQuestionMandatory !== 'boolean') {
+                isTypeError = true;
+                errorMsg += 'isQuestionMandatory (expected boolean)';
+            }
+
+            if(request.body.hasOwnProperty('isRemoteSignupEnabled') && typeof request.body.isRemoteSignupEnabled === 'boolean') {
+                dbCourse.isRemoteSignupEnabled = request.body.isRemoteSignupEnabled;
+            } else if(request.body.hasOwnProperty('isRemoteSignupEnabled') && typeof request.body.isRemoteSignupEnabled !== 'boolean') {
+                isTypeError = true;
+                errorMsg += 'isRemoteSignupEnabled (expected boolean)';
+            }
+
+            if(request.body.hasOwnProperty('turnTime') && typeof request.body.turnTime === 'number') {
+                dbCourse.turnTime = request.body.turnTime;
+            } else if(request.body.hasOwnProperty('turnTime') && typeof request.body.turnTime !== 'number') {
+                isTypeError = true;
+                errorMsg += 'turnTime (expected number)';
+            }
+
+            if(request.body.hasOwnProperty('isActive') && typeof request.body.isActive === 'boolean') {
+                dbCourse.isActive = request.body.isActive;
+            } else if(request.body.hasOwnProperty('isActive') && typeof request.body.isActive !== 'number') {
+                isTypeError = true;
+                errorMsg += 'isActive (expected boolean)';
+            }
+
+            dbCourse.save(function(saveError) {
+                if(saveError) {
+                    var error = {
+                        code: 500,
+                        msg: '[MongoDB Error] An error occurred while trying to save the course.'
+                    };
+
+                    console.error('[', new Date(), ']\t', error.msg);
+                    response.status(error.code).send(error).end();
+                    return;
+                }
+
+                var result = {
+                    code: 200,
+                    result: {
+                        course: dbCourse.course,
+                        isQuestionMandatory: dbCourse.isQuestionMandatory,
+                        isRemoteSignupEnabled: dbCourse.isRemoteSignupEnabled,
+                        turnTime: dbCourse.turnTime,
+                        isActive: dbCourse.isActive
+                    }
+                };
+
+                if(isTypeError) {
+                    result.error = errorMsg;
+                }
+
+                response.status(result.code).send(result).end();
+            });
+        });
+    });
+
+    // Deletes the course
+    router.delete('/:course', function(request, response) {
+        console.log('[', new Date(), ']\t', 'DELETE /api/courses/:course');
+
+        if(!request.params.hasOwnProperty('course')) {
+            var error = {
+                code: 400,
+                msg: 'Query missing property titled \'course\''
+            };
+
+            console.error('[', new Date(), ']\t', error.msg);
+            response.status(error.code).send(error).end();
+            return;
+        }
+
+        var course = request.params.course;
+
+        CourseModel.remove({course: course}, function(removeError, isDeleteSuccessful) {
+            if(removeError) {
+                var error = {
+                    code: 500,
+                    msg: '[MongoDB Error] An error occurred while trying to remove the course.'
+                };
+
+                console.error('[', new Date(), ']\t', error.msg);
+                response.status(error.code).send(error).end();
+                return;
+            }
+
+            if(!isDeleteSuccessful) {
+                var error = {
+                    code: 400,
+                    msg: course + ' does not exist in the DB'
+                };
+
+                console.error('[', new Date(), ']\t', error.msg);
+                response.status(error.code).send(error).end();
+                return;
+            }
+
+            var result = {
+                code: 200,
+                result: 'Successfully deleted ' + course
             };
 
             response.status(result.code).send(result).end();
