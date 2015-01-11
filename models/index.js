@@ -8,6 +8,7 @@ var Schema = mongoose.Schema;
 
 // Models
 var CourseModel = require('./course')(mongoose, Schema);
+var RoomModel = require('./room')(mongoose, Schema);
 
 module.exports = (function() {
     mongoose.connect('mongodb://localhost:27017/signmeup');     // change to config
@@ -19,6 +20,7 @@ module.exports = (function() {
     });
 
     return {
-        Course: CourseModel
+        Course: CourseModel,
+        Room: RoomModel
     };
 })();
