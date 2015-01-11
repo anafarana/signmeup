@@ -171,7 +171,7 @@ exports.getRoutes = function() {
 
             var dbCourse = documents[0];
             var isTypeError = false;
-            var errorMsg = '[Type Error] Incorrect date type for new values of: ';
+            var errorMsg = '[Type Error] Incorrect type for new values of: ';
 
             if(request.body.hasOwnProperty('isQuestionMandatory') && typeof request.body.isQuestionMandatory === 'boolean') {
                 dbCourse.isQuestionMandatory = request.body.isQuestionMandatory;

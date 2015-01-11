@@ -7,7 +7,6 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-var routesValidator = require('./routes/validation');
 
 // Setup
 app.use(bodyParser.json());
@@ -17,8 +16,8 @@ var courses = require('./routes/courses');
 var rooms = require('./routes/rooms');
 
 // Route Handling
-app.use('/api/courses', courses.getRoutes(routesValidator));
-app.use('/api/rooms', rooms.getRoutes(routesValidator));
+app.use('/api/courses', courses.getRoutes());
+app.use('/api/rooms', rooms.getRoutes());
 
 // Hello, world!
 app.listen('8080', function() {
